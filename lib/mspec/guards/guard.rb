@@ -62,7 +62,7 @@ class SpecGuard
       n = 4
     end
 
-    patch = RUBY_PATCHLEVEL.to_i
+    patch = Object.const_defined?(:RUBY_PATCHLEVEL) ? RUBY_PATCHLEVEL.to_i : 0
     patch = 0 if patch < 0
     version = "#{ruby_version_override || RUBY_VERSION}.#{patch}"
     version.split('.')[0,n].join('.')

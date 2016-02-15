@@ -124,18 +124,44 @@ class MSpecMain < MSpecScript
     timer = TimerAction.new
     timer.start
 
+    pids = []
     files = config[:ci_files].inject([]) do |list, item|
       name = tmp "mspec-ci-multi-#{list.size}"
 
       rest = argv + ["-o", name, item]
-      fork { system [config[:target], *rest].join(" ") }
+      if Kernel.respond_to?(:fork)
+        pid = fork { system [config[:target], *rest].join(" ") }
+        pids.push(pid) if pid
+      elsif Kernel.respond_to?(:spawn)
+        pids.push spawn([config[:target], *rest].join(" "))
+      end
 
       list << name
     end
 
-    Process.waitall
+    if Process.respond_to?(:waitall)
+      Process.waitall
+    else
+      pids.each { |p| Process.wait(p) }
+    end
     timer.finish
     report files, timer
+  end
+  
+  def try_exec(*argv)
+    if Kernel.respond_to?(:exec)
+      exec *argv
+    elsif Kernel.respond_to?(:spawn) && Process.repond_to?(:wait)
+      pid = spawn *argv
+      Process.wait(pid)
+      exit $?.exitstatus
+    else
+      if system(argv.join(' '))
+        exit 0
+      else
+        exit 1
+      end
+    end
   end
 
   def run
@@ -159,13 +185,12 @@ class MSpecMain < MSpecScript
       if config[:use_valgrind]
         more = ["--child-silent-after-fork=yes",
                 config[:target]] + argv
-        exec "valgrind", *more
+        try_exec "valgrind", *more
       else
         cmd, *rest = config[:target].split(/\s+/)
         argv = rest + argv unless rest.empty?
-        exec cmd, *argv
+        try_exec cmd, *argv
       end
     end
   end
 end
-

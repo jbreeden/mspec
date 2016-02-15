@@ -88,9 +88,7 @@ class MSpecRun < MSpecScript
   def run
     MSpec.register_tags_patterns config[:tags_patterns]
     MSpec.register_files @files
-
     MSpec.process
     exit MSpec.exit_code
   end
 end
-

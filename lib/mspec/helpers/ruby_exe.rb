@@ -107,7 +107,8 @@ class Object
       next unless cmd = ruby_exe_options(option)
       exe, *rest = cmd.split(" ")
 
-      if File.file?(exe) and File.executable?(exe)
+      try_to_exec = !File.respond_to?(:executable?) || File.executable?(exe)
+      if File.file?(exe) and try_to_exec
         return [File.expand_path(exe), *rest].join(" ")
       end
     end
