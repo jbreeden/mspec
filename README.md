@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/ruby/mspec.svg?branch=master)](https://travis-ci.org/ruby/mspec)
+# THIS IS AN MRUBY FORK
+
+This fork of `mspec` is an experiment in running the Ruby specs with MRuby.
 
 ## Overview
 
